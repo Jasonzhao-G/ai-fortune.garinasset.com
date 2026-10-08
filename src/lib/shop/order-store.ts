@@ -73,6 +73,16 @@ export function createOrder(sku: string, userId?: string): ShopOrder | null {
   return order;
 }
 
+/** 服务端订单写入本地，便于支付页与历史订单展示 */
+export function upsertLocalOrder(order: ShopOrder): void {
+  if (typeof window === "undefined") return;
+  const orders = getAllOrders();
+  const idx = orders.findIndex((o) => o.id === order.id);
+  if (idx >= 0) orders[idx] = order;
+  else orders.unshift(order);
+  saveOrders(orders);
+}
+
 export function getOrderById(orderId: string): ShopOrder | undefined {
   return getAllOrders().find((o) => o.id === orderId);
 }

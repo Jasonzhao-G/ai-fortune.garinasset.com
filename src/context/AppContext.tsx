@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { translations, type Locale, type Theme, type Translations } from "@/lib/i18n";
 import type { UserProfile } from "@/lib/types";
 import { getOrCreateUser } from "@/lib/user-store";
+import { syncUserToServer } from "@/lib/client/sync-user";
 import { registerReferral } from "@/lib/community-store";
 import { prefetchDailyFortune } from "@/lib/daily-fortune-store";
 import {
@@ -102,6 +103,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         try { registerReferral(ref, u.id); } catch { /* ignore */ }
       }
       setUser(u);
+      syncUserToServer(u);
       prefetchDailyFortune();
     } catch (err) {
       console.error("init user failed", err);
@@ -138,7 +140,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(() => {
     try {
-      setUser(getOrCreateUser());
+      const u = getOrCreateUser();
+      setUser(u);
+      syncUserToServer(u);
       prefetchDailyFortune();
     } catch { /* ignore */ }
   }, []);

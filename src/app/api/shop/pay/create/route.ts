@@ -3,6 +3,8 @@ import { getProductBySku } from "@/lib/shop/catalog";
 import { canCheckoutInApp } from "@/lib/shop/purchase";
 import { createShopPayment, type PayScene } from "@/lib/shop/payment-gateway";
 import type { PayMethod } from "@/lib/shop/order-store";
+import { isDbConfigured } from "@/lib/db/client";
+import { getDbOrderById } from "@/lib/db/shop-orders";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,6 +34,19 @@ export async function POST(req: NextRequest) {
 
     if (typeof amount !== "number" || amount !== product.price) {
       return NextResponse.json({ error: "订单金额与商品价格不一致" }, { status: 400 });
+    }
+
+    if (isDbConfigured()) {
+      const row = await getDbOrderById(orderId);
+      if (
+        !row ||
+        row.user_id !== userId ||
+        row.sku !== sku ||
+        Number(row.amount) !== amount ||
+        row.status !== "pending_payment"
+      ) {
+        return NextResponse.json({ error: "订单无效或已支付" }, { status: 400 });
+      }
     }
 
     const result = await createShopPayment({

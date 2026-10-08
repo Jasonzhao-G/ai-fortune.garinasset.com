@@ -6,8 +6,9 @@ import BackLink from "@/components/ui/BackLink";
 import PageHeader from "@/components/ui/PageHeader";
 import { formatPrice, getProductBySku } from "@/lib/shop/catalog";
 import ShopProductAvatar from "@/components/shop/ShopProductAvatar";
-import { createOrder } from "@/lib/shop/order-store";
+import { createOrder, upsertLocalOrder } from "@/lib/shop/order-store";
 import { canCheckoutInApp } from "@/lib/shop/purchase";
+import { createServerShopOrder } from "@/lib/shop/server-order-client";
 import { useApp } from "@/context/AppContext";
 
 function CheckoutContent() {
@@ -26,11 +27,13 @@ function CheckoutContent() {
 
   if (!product) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (submitting || !user) return;
     setSubmitting(true);
-    const order = createOrder(product.sku, user.id);
+    const serverOrder = await createServerShopOrder(product.sku, user);
+    const order = serverOrder ?? createOrder(product.sku, user.id);
     if (order) {
+      upsertLocalOrder(order);
       router.push(`/shop/pay/${order.id}`);
     } else {
       setSubmitting(false);

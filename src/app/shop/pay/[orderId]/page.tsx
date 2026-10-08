@@ -9,8 +9,10 @@ import {
   confirmOrderPaid,
   getOrderById,
   PAY_METHOD_LABEL,
+  upsertLocalOrder,
   type PayMethod,
 } from "@/lib/shop/order-store";
+import { completeServerShopOrder } from "@/lib/shop/server-order-client";
 import { formatPrice } from "@/lib/shop/catalog";
 import { ShopOrderItemAvatar } from "@/components/shop/ShopProductAvatar";
 import { useApp } from "@/context/AppContext";
@@ -97,17 +99,19 @@ export default function ShopPayPage() {
   if (!order) return null;
 
   const handleConfirmPaid = () => {
-    if (!payMethod || paying) return;
+    if (!payMethod || paying || !user) return;
     setPaying(true);
-    setTimeout(() => {
+    void (async () => {
+      await completeServerShopOrder(order.id, user.id, payMethod);
       const updated = confirmOrderPaid(order.id, payMethod);
       if (updated) {
+        upsertLocalOrder(updated);
         setOrder(updated);
         setStep("success");
         refreshUser();
       }
       setPaying(false);
-    }, 600);
+    })();
   };
 
   const methodColor = payMethod === "alipay" ? "text-blue-500" : "text-green-500";

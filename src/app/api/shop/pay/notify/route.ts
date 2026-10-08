@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPaymentNotify } from "@/lib/shop/payment-gateway";
+import { isDbConfigured } from "@/lib/db/client";
+import { markDbOrderPaidFromNotify } from "@/lib/db/shop-orders";
 
 /**
  * 聚合支付异步通知入口（生产环境由支付平台 POST 调用）
@@ -14,7 +16,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid notify" }, { status: 400 });
     }
 
-    // TODO: 幂等更新订单 paid + fulfillVirtualOrder（迁移至 DB 后实现）
+    if (isDbConfigured()) {
+      await markDbOrderPaidFromNotify(
+        verified.orderId,
+        verified.providerTradeNo,
+      );
+    }
+    // TODO: 聚合验签通过后，服务端虚拟发货（灵丹入账需服务端账本）
     return NextResponse.json({ received: true });
   } catch {
     return NextResponse.json({ error: "notify error" }, { status: 500 });
