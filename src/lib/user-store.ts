@@ -287,3 +287,21 @@ export function registerUser(params: {
 export function getInviteQrUrl(link: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
 }
+
+/** 服务端登录/注册成功后写入本地 */
+export function applyServerUser(user: UserProfile): UserProfile {
+  if (typeof window === "undefined") return user;
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  initPetFoodForUser(user.id);
+  ensureNicknameRegistered(user.id, user.nickname);
+  return user;
+}
+
+/** 退出登录：清除本地账号并创建新访客 */
+export function logoutToGuest(): UserProfile {
+  if (typeof window === "undefined") {
+    return getOrCreateUser();
+  }
+  localStorage.removeItem(USER_KEY);
+  return getOrCreateUser();
+}

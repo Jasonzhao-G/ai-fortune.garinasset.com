@@ -3,8 +3,9 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { translations, type Locale, type Theme, type Translations } from "@/lib/i18n";
 import type { UserProfile } from "@/lib/types";
-import { getOrCreateUser } from "@/lib/user-store";
+import { applyServerUser, getOrCreateUser } from "@/lib/user-store";
 import { syncUserToServer } from "@/lib/client/sync-user";
+import { authFetchSession } from "@/lib/client/auth-api";
 import { registerReferral } from "@/lib/community-store";
 import { prefetchDailyFortune } from "@/lib/daily-fortune-store";
 import {
@@ -95,19 +96,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const ref = params.get("ref") ?? undefined;
-      const u = getOrCreateUser(ref);
-      if (ref && ref !== u.id && u.referredBy === ref) {
-        try { registerReferral(ref, u.id); } catch { /* ignore */ }
+    void (async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get("ref") ?? undefined;
+        const serverUser = await authFetchSession();
+        let u = serverUser ? applyServerUser(serverUser) : getOrCreateUser(ref);
+        if (!serverUser && ref && ref !== u.id && u.referredBy === ref) {
+          try { registerReferral(ref, u.id); } catch { /* ignore */ }
+        }
+        setUser(u);
+        syncUserToServer(u);
+        prefetchDailyFortune();
+      } catch (err) {
+        console.error("init user failed", err);
       }
-      setUser(u);
-      syncUserToServer(u);
-      prefetchDailyFortune();
-    } catch (err) {
-      console.error("init user failed", err);
-    }
+    })();
   }, []);
 
   const setLocale = useCallback((l: Locale) => {

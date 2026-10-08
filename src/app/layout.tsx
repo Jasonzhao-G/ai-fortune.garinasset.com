@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
+import SiteDisclaimerFooter from "@/components/SiteDisclaimerFooter";
 import { DEFAULT_UI_THEME } from "@/lib/ui-themes";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TopBar />
           <main className="page-shell mx-auto min-h-screen max-w-lg pb-[72px]">
             {children}
+            <SiteDisclaimerFooter />
           </main>
           <BottomNav />
         </Providers>

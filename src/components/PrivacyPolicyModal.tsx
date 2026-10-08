@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { X } from "lucide-react";
-import { USER_AGREEMENT_BODY, USER_AGREEMENT_TITLE } from "@/lib/legal/user-agreement";
+import { PRIVACY_POLICY_BODY, PRIVACY_POLICY_TITLE } from "@/lib/legal/privacy-policy";
 
-interface UserAgreementModalProps {
+interface PrivacyPolicyModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-export default function UserAgreementModal({ open, onClose }: UserAgreementModalProps) {
+export default function PrivacyPolicyModal({ open, onClose }: PrivacyPolicyModalProps) {
   if (!open) return null;
 
   return (
@@ -19,16 +19,16 @@ export default function UserAgreementModal({ open, onClose }: UserAgreementModal
         <button onClick={onClose} className="absolute right-4 top-4">
           <X className="h-5 w-5 text-app-muted" />
         </button>
-        <h2 className="mb-3 pr-8 text-sm font-semibold text-app-text">{USER_AGREEMENT_TITLE}</h2>
+        <h2 className="mb-3 pr-8 text-sm font-semibold text-app-text">{PRIVACY_POLICY_TITLE}</h2>
         <pre className="max-h-[50vh] whitespace-pre-wrap text-[11px] leading-relaxed text-app-muted">
-          {USER_AGREEMENT_BODY}
+          {PRIVACY_POLICY_BODY}
         </pre>
         <Link
-          href="/legal/terms"
+          href="/legal/privacy"
           onClick={onClose}
           className="mt-3 block text-center text-xs text-app-accent underline"
         >
-          查看完整协议页面
+          查看完整隐私政策
         </Link>
       </div>
     </div>

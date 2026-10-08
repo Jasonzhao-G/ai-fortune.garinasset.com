@@ -56,6 +56,32 @@ export async function ensureDbSchema() {
       await sql`
         CREATE INDEX IF NOT EXISTS shop_orders_created_at_idx ON shop_orders(created_at DESC)
       `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS auth_accounts (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES app_users(id),
+          method TEXT NOT NULL,
+          account TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          UNIQUE (method, account)
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS auth_otps (
+          id SERIAL PRIMARY KEY,
+          method TEXT NOT NULL,
+          account TEXT NOT NULL,
+          purpose TEXT NOT NULL,
+          code_hash TEXT NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        CREATE INDEX IF NOT EXISTS auth_otps_lookup_idx ON auth_otps (method, account, purpose, created_at DESC)
+      `;
     })();
   }
   await schemaPromise;

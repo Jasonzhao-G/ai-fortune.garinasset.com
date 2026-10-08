@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { X, Gift, Sparkles, Globe, Mail, Info, Bell, History, UserPen, Palette, ShoppingBag } from "lucide-react";
+import { X, Gift, Sparkles, Globe, Mail, Info, Bell, History, UserPen, Palette, ShoppingBag, LogIn, LogOut, Shield } from "lucide-react";
 import SpiritGourdIcon from "@/components/icons/SpiritGourdIcon";
 import { useApp } from "@/context/AppContext";
 import type { UserProfile } from "@/lib/types";
-import { getInviteLink } from "@/lib/user-store";
+import { getInviteLink, hasRegisteredAccount, logoutToGuest } from "@/lib/user-store";
+import { authLogout } from "@/lib/client/auth-api";
 import { getTotalUses, getPetFoodBalance, hasUnlimitedAccess } from "@/lib/pet-food-store";
 import { UI_THEMES } from "@/lib/ui-themes";
 import ContactModal from "@/components/ContactModal";
@@ -135,6 +136,36 @@ export default function ProfileMenu({ user, open, onClose, onEditProfile }: Prof
             </button>
 
             <div className="my-2 border-t border-app-border" />
+
+            {hasRegisteredAccount() ? (
+              <button
+                type="button"
+                className="menu-item w-full"
+                onClick={() => {
+                  void authLogout();
+                  logoutToGuest();
+                  refreshUser();
+                  onClose();
+                }}
+              >
+                <LogOut className="h-4 w-4 text-app-muted" />
+                退出登录
+              </button>
+            ) : (
+              <Link href="/login" onClick={onClose} className="menu-item">
+                <LogIn className="h-4 w-4 text-app-accent" />
+                登录 / 注册
+              </Link>
+            )}
+
+            <Link href="/legal/terms" onClick={onClose} className="menu-item">
+              <Shield className="h-4 w-4 text-app-muted" />
+              用户协议
+            </Link>
+            <Link href="/legal/privacy" onClick={onClose} className="menu-item">
+              <Shield className="h-4 w-4 text-app-muted" />
+              隐私政策
+            </Link>
 
             <Link href="/theme-preview" onClick={onClose} className="menu-item">
               <Palette className="h-4 w-4 text-app-accent" />
