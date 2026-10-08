@@ -6,7 +6,7 @@ import TarotCrystalBallOverlay from "@/components/tarot/TarotCrystalBallOverlay"
 import ReportPosterButton, { SharePosterButton } from "@/components/ReportPosterButton";
 import PaywallModal from "@/components/PaywallModal";
 import FormattedAnalysisText from "@/components/FormattedAnalysisText";
-import AiDisclaimer from "@/components/AiDisclaimer";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import TarotDrawStage from "@/components/tarot/TarotDrawStage";
 import TarotSpreadDisplay from "@/components/tarot/TarotSpreadDisplay";
 import BoostFortuneButton from "@/components/BoostFortuneButton";
@@ -72,7 +72,9 @@ export default function TarotExperience({ embedded }: TarotExperienceProps) {
   }, []);
 
   const handleStart = () => {
+    void (async () => {
     if (!question.trim()) return;
+    if (!(await ensureRegisteredAccount())) return;
     if (!canUse("tarot")) {
       setPaywall(true);
       return;
@@ -80,6 +82,7 @@ export default function TarotExperience({ embedded }: TarotExperienceProps) {
     setError(null);
     setResult(null);
     setPhase("drawing");
+    })();
   };
 
   const handleReadyForAnalysis = useCallback(async (cards: DrawnTarotCard[]) => {
@@ -197,8 +200,6 @@ export default function TarotExperience({ embedded }: TarotExperienceProps) {
               </p>
             )}
           </div>
-
-          <AiDisclaimer className="mb-4" />
 
           <div className="app-card mb-4 !p-4">
             <h3 className="mb-3 text-sm font-semibold text-app-gold">AI 牌阵解读</h3>

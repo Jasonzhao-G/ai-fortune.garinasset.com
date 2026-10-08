@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Bell, Bookmark, MessageCircle, Repeat2, Send, Users, UserPlus, Heart } from "lucide-react";
 import ComingSoonModal from "@/components/ComingSoonModal";
 import { useApp } from "@/context/AppContext";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import {
   getMyPosts, getMyFavoritePosts, getMyComments, getMyRepostPosts,
   getFollowerUsers, getFollowingUsers, addPost,
@@ -77,11 +78,14 @@ export default function CommunityMePage() {
   const refresh = () => setRefreshKey((k) => k + 1);
 
   const handlePost = () => {
+    void (async () => {
     if (!postContent.trim() && postImages.length === 0) return;
+    if (!(await ensureRegisteredAccount("登录或注册后即可发帖"))) return;
     addPost(postContent.trim(), postImages);
     setPostContent("");
     setPostImages([]);
     refresh();
+    })();
   };
 
   const renderPostList = (list: CommunityPost[], empty: string) => (

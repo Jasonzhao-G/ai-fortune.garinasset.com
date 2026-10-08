@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import FormattedAnalysisText from "@/components/FormattedAnalysisText";
-import AiDisclaimer from "@/components/AiDisclaimer";
 import type { AnalysisResult, BaziResult, AnalysisCategory } from "@/lib/types";
 
 const CATEGORIES: { key: AnalysisCategory; label: string; icon: string }[] = [
@@ -50,16 +49,12 @@ export default function AnalysisPanel({ result, bazi }: AnalysisPanelProps) {
               <p>{bazi.dayMaster} · {bazi.wuxing}</p>
             </div>
           </div>
-          <AiDisclaimer />
         </>
       ) : (
-        <>
-          <div className="app-card">
-            <h3 className="mb-3 text-sm font-semibold text-app-gold">综合概述</h3>
-            <FormattedAnalysisText text={result.summary} collapsedParagraphs={3} showLabel={false} />
-          </div>
-          <AiDisclaimer />
-        </>
+        <div className="app-card">
+          <h3 className="mb-3 text-sm font-semibold text-app-gold">综合概述</h3>
+          <FormattedAnalysisText text={result.summary} collapsedParagraphs={3} showLabel={false} />
+        </div>
       )}
 
       {bazi && (

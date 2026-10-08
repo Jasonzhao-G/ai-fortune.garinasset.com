@@ -6,6 +6,7 @@ import AnalysisPanel from "@/components/AnalysisPanel";
 import XiangScanOverlay from "@/components/XiangScanOverlay";
 import GenerationOverlay from "@/components/GenerationOverlay";
 import PaywallModal from "@/components/PaywallModal";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import ReportPosterButton, { SharePosterButton } from "@/components/ReportPosterButton";
 import { canUse, incrementUsage, addHistory } from "@/lib/user-store";
 import { usePetFoodRemaining } from "@/hooks/usePetFoodRemaining";
@@ -104,13 +105,16 @@ export default function XiangHubPanel() {
   }, [pendingType]);
 
   const startAnalyze = () => {
+    void (async () => {
     if (!preview) return;
+    if (!(await ensureRegisteredAccount())) return;
     if (!ensurePrimaryPersonBeforeCalc()) { setPrimaryModal(true); return; }
     if (!canUse("xiang")) { setPaywall(true); return; }
     setPendingType(tab);
     pendingPreview.current = preview;
     setResult(null);
     setScanning(true);
+    })();
   };
 
   const scanLabel = tab === "palm" ? "手相矩阵扫描中…" : "面相矩阵扫描中…";

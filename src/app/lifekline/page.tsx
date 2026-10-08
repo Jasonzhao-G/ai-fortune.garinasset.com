@@ -30,7 +30,7 @@ import { LIFE_YEAR_OPTIONS } from "@/lib/life-year-options";
 import PageHeader from "@/components/ui/PageHeader";
 import DeferredPageBanner from "@/components/DeferredPageBanner";
 import FortuneHubNav, { type FortuneHubTab } from "@/components/FortuneHubNav";
-import AiDisclaimer from "@/components/AiDisclaimer";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import { LazyHubPanel, LazyBaziHubPanel } from "@/components/fortune-hub/LazyHubPanels";
 import { LifeklineHubDemo } from "@/components/fortune-hub/HubFeatureDemos";
 import FoodRulesModal from "@/components/FoodRulesModal";
@@ -415,6 +415,8 @@ export default function LifeklinePage() {
   };
 
   const handleSubmit = (info: BirthInfo) => {
+    void (async () => {
+    if (!(await ensureRegisteredAccount())) return;
     if (!ensurePrimaryPersonBeforeCalc()) { setPrimaryModal(true); return; }
     if (!canUse("lifekline")) { setPaywall(true); return; }
     setError(null);
@@ -428,6 +430,7 @@ export default function LifeklinePage() {
     setBirthInfo(info);
     setGenerateSession((s) => s + 1);
     setPhase("generating");
+    })();
   };
 
   const onGenerateComplete = useCallback(() => {
@@ -626,8 +629,6 @@ export default function LifeklinePage() {
             showBack={!!drillYear}
             onBack={handleBackFromDrill}
           />
-          {hasResult && <AiDisclaimer className="mt-2" />}
-
           {drillYear && monthlyLoading && (
             <p className="mt-2 text-center text-xs text-app-accent animate-pulse">正在加载该年的月度真实K线…</p>
           )}

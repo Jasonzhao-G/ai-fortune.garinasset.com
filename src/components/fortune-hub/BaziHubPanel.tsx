@@ -5,6 +5,7 @@ import BirthForm from "@/components/BirthForm";
 import GenerationOverlay from "@/components/GenerationOverlay";
 import AnalysisPanel from "@/components/AnalysisPanel";
 import PaywallModal from "@/components/PaywallModal";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import PrimaryPersonModal from "@/components/PrimaryPersonModal";
 import BoostFortuneButton from "@/components/BoostFortuneButton";
 import { canUse, incrementUsage } from "@/lib/user-store";
@@ -48,6 +49,8 @@ export default function BaziHubPanel() {
   }, []);
 
   const handleSubmit = (info: BirthInfo) => {
+    void (async () => {
+    if (!(await ensureRegisteredAccount())) return;
     if (!ensurePrimaryPersonBeforeCalc()) {
       setPrimaryModal(true);
       return;
@@ -59,6 +62,7 @@ export default function BaziHubPanel() {
     setError(null);
     setBirthInfo(info);
     setPhase("generating");
+    })();
   };
 
   useEffect(() => {

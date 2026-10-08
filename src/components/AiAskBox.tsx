@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Send, Sparkles } from "lucide-react";
 import { canUse, incrementUsage, addHistory } from "@/lib/user-store";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import { usePetFoodRemaining } from "@/hooks/usePetFoodRemaining";
 import { formatPetFoodRemaining } from "@/lib/pet-food-remaining";
 import { saveRecord, buildPersonKey, buildPersonLabel } from "@/lib/record-store";
@@ -79,6 +80,7 @@ export default function AiAskBox({
       setEditingBirth(true);
       return;
     }
+    if (!(await ensureRegisteredAccount())) return;
     if (!ensurePrimaryPersonBeforeCalc()) { setPrimaryModal(true); return; }
     if (!canUse("aiAsk")) { setPaywall(true); return; }
 

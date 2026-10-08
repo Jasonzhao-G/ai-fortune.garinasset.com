@@ -7,6 +7,7 @@ import {
   type PosterData, type PosterStyle,
 } from "@/lib/poster";
 import { useApp } from "@/context/AppContext";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 
 interface ReportPosterButtonProps {
   data: Omit<PosterData, "userName">;
@@ -28,6 +29,7 @@ export default function ReportPosterButton({ data, label = "生成报告海报",
   });
 
   const openPreview = async () => {
+    if (!(await ensureRegisteredAccount("登录后可生成报告海报"))) return;
     if (onBeforeGenerate && !onBeforeGenerate()) return;
     setLoading(true);
     try {
@@ -77,6 +79,7 @@ export function SharePosterButton({ data, onBeforeGenerate }: ReportPosterButton
   const [style, setStyle] = useState<PosterStyle>("classic");
 
   const openPreview = async () => {
+    if (!(await ensureRegisteredAccount("登录后可生成分享海报"))) return;
     if (onBeforeGenerate && !onBeforeGenerate()) return;
     setLoading(true);
     try {

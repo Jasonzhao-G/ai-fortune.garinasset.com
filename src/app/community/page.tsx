@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, MessageCircle, Gift, User, Bell } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import {
   getPostsByFeed, addPost, toggleLike, toggleFavorite, addComment,
   getComments, repostPost, toggleFollow, searchCommunity, isFavorited,
@@ -57,11 +58,14 @@ export default function CommunityPage() {
   useEffect(() => { refresh(); }, [feedTab, uid]);
 
   const handlePost = () => {
+    void (async () => {
     if (!content.trim() && postImages.length === 0) return;
+    if (!(await ensureRegisteredAccount("登录或注册后即可发帖"))) return;
     addPost(content.trim(), postImages);
     refresh();
     setContent("");
     setPostImages([]);
+    })();
   };
 
   const handleFavoriteClick = (post: CommunityPost) => {

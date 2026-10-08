@@ -5,7 +5,7 @@ import GenerationOverlay from "@/components/GenerationOverlay";
 import ReportPosterButton, { SharePosterButton } from "@/components/ReportPosterButton";
 import PaywallModal from "@/components/PaywallModal";
 import FormattedAnalysisText from "@/components/FormattedAnalysisText";
-import AiDisclaimer from "@/components/AiDisclaimer";
+import { ensureRegisteredAccount } from "@/lib/client/login-gate";
 import LiuyaoCoinCast from "@/components/liuyao/LiuyaoCoinCast";
 import LiuyaoIntro from "@/components/liuyao/LiuyaoIntro";
 import LiuyaoCastScene from "@/components/liuyao/LiuyaoCastScene";
@@ -78,7 +78,9 @@ export default function LiuyaoExperience({ embedded }: LiuyaoExperienceProps) {
   }, []);
 
   const handleStart = () => {
+    void (async () => {
     if (!question.trim()) return;
+    if (!(await ensureRegisteredAccount())) return;
     if (!canUse("liuyao")) {
       setPaywall(true);
       return;
@@ -86,6 +88,7 @@ export default function LiuyaoExperience({ embedded }: LiuyaoExperienceProps) {
     setError(null);
     setResult(null);
     setPhase("casting");
+    })();
   };
 
   const handleRequestAnalysis = useCallback(async (lines: YaoLine[]) => {
@@ -219,8 +222,6 @@ export default function LiuyaoExperience({ embedded }: LiuyaoExperienceProps) {
               showLuck
             />
           </div>
-
-          <AiDisclaimer className="mb-4" />
 
           <div className="app-card mb-4">
             <h3 className="mb-3 text-sm font-semibold text-app-gold">AI大模型解卦</h3>

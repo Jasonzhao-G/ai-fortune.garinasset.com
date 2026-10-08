@@ -12,7 +12,6 @@ import {
 } from "@/lib/spirit-pet-tasks";
 import { hashBirth } from "@/lib/fortune-chart";
 import SectionCard from "@/components/ui/SectionCard";
-import AiDisclaimer from "@/components/AiDisclaimer";
 
 interface SpiritPetFortuneStickProps {
   pet: SpiritPetProfile;
@@ -135,7 +134,6 @@ export default function SpiritPetFortuneStick({ pet, personKey, birth }: SpiritP
             </div>
             {!canDraw && <p className="mt-3 text-[10px] text-[#a0522d]/70">明日再来求签</p>}
           </div>
-          <AiDisclaimer className="mt-3" />
         </>
       )}
     </SectionCard>
