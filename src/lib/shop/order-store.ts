@@ -1,6 +1,7 @@
 import { getOrCreateUser } from "@/lib/user-store";
 import { purchasePetFood } from "@/lib/pet-food-store";
 import { getProductBySku, type ShopCategory } from "./catalog";
+import { canCheckoutInApp } from "./purchase";
 import { grantVirtualItem } from "./inventory-store";
 
 export type OrderStatus = "pending_payment" | "paid" | "fulfilled" | "cancelled";
@@ -50,7 +51,7 @@ function genOrderId(): string {
 export function createOrder(sku: string, userId?: string): ShopOrder | null {
   const product = getProductBySku(sku);
   const uid = userId ?? getOrCreateUser().id;
-  if (!product || product.availability !== "available") return null;
+  if (!product || !canCheckoutInApp(product)) return null;
 
   const order: ShopOrder = {
     id: genOrderId(),

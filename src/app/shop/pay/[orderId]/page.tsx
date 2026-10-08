@@ -11,7 +11,6 @@ import {
   PAY_METHOD_LABEL,
   type PayMethod,
 } from "@/lib/shop/order-store";
-import { getShopPaymentQrUrl } from "@/lib/shop/payment";
 import { formatPrice } from "@/lib/shop/catalog";
 import { ShopOrderItemAvatar } from "@/components/shop/ShopProductAvatar";
 import { useApp } from "@/context/AppContext";
@@ -27,6 +26,10 @@ export default function ShopPayPage() {
   const [step, setStep] = useState<Step>("method");
   const [payMethod, setPayMethod] = useState<PayMethod | null>(null);
   const [paying, setPaying] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
+  const [payNotice, setPayNotice] = useState("");
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState("");
 
   useEffect(() => {
     const current = getOrderById(orderId);
@@ -42,12 +45,56 @@ export default function ShopPayPage() {
     setOrder(current);
   }, [orderId, router]);
 
-  if (!order) return null;
+  useEffect(() => {
+    if (step !== "qrcode" || !payMethod || !user || !order) return;
+    const sku = order.items[0]?.sku;
+    if (!sku) return;
 
-  const qrUrl =
-    payMethod && user
-      ? getShopPaymentQrUrl(order.id, order.totalAmount, payMethod, user.id)
-      : "";
+    let cancelled = false;
+    setPayLoading(true);
+    setPayError("");
+    setQrUrl("");
+    setPayNotice("");
+
+    fetch("/api/shop/pay/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId: order.id,
+        sku,
+        amount: order.totalAmount,
+        userId: user.id,
+        method: payMethod,
+        scene: "native",
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok) {
+          setPayError(data.error ?? "无法创建支付");
+          return;
+        }
+        if (data.mode === "demo") {
+          setQrUrl(data.qrCodeUrl ?? "");
+          setPayNotice(data.message ?? "");
+        } else if (data.mode === "live") {
+          setQrUrl(data.qrCodeUrl ?? data.payUrl ?? "");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPayError("网络异常，请稍后重试");
+      })
+      .finally(() => {
+        if (!cancelled) setPayLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [step, payMethod, user, order]);
+
+  if (!order) return null;
 
   const handleConfirmPaid = () => {
     if (!payMethod || paying) return;
@@ -104,20 +151,31 @@ export default function ShopPayPage() {
               )}
               {order.items[0]?.name} · {formatPrice(order.totalAmount)}
             </p>
-            <div className="mx-auto mt-4 inline-block rounded-2xl border border-app-border bg-white p-3">
-              <img
-                src={qrUrl}
-                alt={`${PAY_METHOD_LABEL[payMethod]}支付二维码`}
-                className="h-52 w-52"
-              />
-            </div>
+            {payLoading ? (
+              <p className="caption mt-4">正在生成支付码…</p>
+            ) : payError ? (
+              <p className="caption mt-4 text-red-500">{payError}</p>
+            ) : qrUrl ? (
+              <div className="mx-auto mt-4 inline-block rounded-2xl border border-app-border bg-white p-3">
+                <img
+                  src={qrUrl}
+                  alt={`${PAY_METHOD_LABEL[payMethod]}支付二维码`}
+                  className="h-52 w-52"
+                />
+              </div>
+            ) : null}
+            {payNotice && (
+              <p className="caption mt-3 rounded-lg bg-app-gold/10 px-3 py-2 text-app-muted">
+                {payNotice}
+              </p>
+            )}
             <p className="caption mt-3">
               打开{PAY_METHOD_LABEL[payMethod]}扫一扫，完成付款后点击下方按钮
             </p>
             <button
               type="button"
               onClick={handleConfirmPaid}
-              disabled={paying}
+              disabled={paying || payLoading || !!payError || !qrUrl}
               className="app-btn mt-4 w-full disabled:opacity-50"
             >
               {paying ? "确认支付中..." : "我已完成支付"}

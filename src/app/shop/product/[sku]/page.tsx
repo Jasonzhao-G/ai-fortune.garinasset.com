@@ -8,6 +8,12 @@ import Badge from "@/components/ui/Badge";
 import { formatPrice, getProductBySku } from "@/lib/shop/catalog";
 import ShopProductAvatar from "@/components/shop/ShopProductAvatar";
 import { ownsVirtualItem } from "@/lib/shop/inventory-store";
+import {
+  canCheckoutInApp,
+  isExternalProduct,
+  resolveExternalPurchaseUrl,
+} from "@/lib/shop/purchase";
+import { EXTERNAL_STORE_LABEL } from "@/lib/shop/config";
 import { useApp } from "@/context/AppContext";
 
 export default function ShopProductPage() {
@@ -24,19 +30,31 @@ export default function ShopProductPage() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!product || product.availability !== "available") {
+    if (!product) {
+      router.replace("/shop");
+      return;
+    }
+    if (product.availability === "coming_soon") {
       router.replace("/shop");
     }
   }, [ready, product, router]);
 
-  if (!product || product.availability !== "available") {
+  if (!product || product.availability === "coming_soon") {
     return null;
   }
 
+  const external = isExternalProduct(product);
+  const inApp = canCheckoutInApp(product);
   const owned =
     user != null &&
     product.virtualKind !== "food" &&
+    inApp &&
     ownsVirtualItem(user.id, product.sku);
+
+  const openExternalStore = () => {
+    const url = resolveExternalPurchaseUrl(product);
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <>
@@ -59,18 +77,31 @@ export default function ShopProductPage() {
                 {product.tags?.map((tag) => (
                   <Badge key={tag} variant="accent">{tag}</Badge>
                 ))}
+                {external && (
+                  <Badge variant="gold">{EXTERNAL_STORE_LABEL}发货</Badge>
+                )}
                 {owned && <Badge variant="success">已拥有</Badge>}
               </div>
               <div className="mt-2 flex items-center justify-between gap-3">
                 <p className="block-title text-app-accent">{formatPrice(product.price)}</p>
-                <button
-                  type="button"
-                  disabled={owned}
-                  onClick={() => router.push(`/shop/checkout?sku=${product.sku}`)}
-                  className="shrink-0 rounded-xl bg-app-accent px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {owned ? "已拥有" : "购买"}
-                </button>
+                {external ? (
+                  <button
+                    type="button"
+                    onClick={openExternalStore}
+                    className="shrink-0 rounded-xl bg-app-accent px-5 py-2 text-sm font-semibold text-white"
+                  >
+                    去{EXTERNAL_STORE_LABEL}购买
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={owned}
+                    onClick={() => router.push(`/shop/checkout?sku=${product.sku}`)}
+                    className="shrink-0 rounded-xl bg-app-accent px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {owned ? "已拥有" : "购买"}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -81,6 +112,12 @@ export default function ShopProductPage() {
             <p className="block-label mb-1 text-app-accent">商品说明</p>
             <p className="caption leading-relaxed">{product.detail}</p>
           </div>
+        )}
+
+        {external && (
+          <p className="caption mt-2 px-1 text-app-muted">
+            实物与 NFC 玩偶在{EXTERNAL_STORE_LABEL}完成下单与售后，本站展示价格仅供参考，以微店页面为准。
+          </p>
         )}
 
         {product.virtualKind === "food" && (

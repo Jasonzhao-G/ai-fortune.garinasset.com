@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { formatPrice, type ShopProduct } from "@/lib/shop/catalog";
+import { canCheckoutInApp, isExternalProduct } from "@/lib/shop/purchase";
 import Badge from "@/components/ui/Badge";
 import ShopProductAvatar from "@/components/shop/ShopProductAvatar";
 import { ShopEmojiDisplay } from "@/components/icons/SpiritGourdIcon";
@@ -9,21 +10,39 @@ import { ShopEmojiDisplay } from "@/components/icons/SpiritGourdIcon";
 interface ShopProductGridCardProps {
   product: ShopProduct;
   onBuy?: () => void;
+  onCardClick?: () => void;
   owned?: boolean;
 }
 
 export default function ShopProductGridCard({
   product,
   onBuy,
+  onCardClick,
   owned,
 }: ShopProductGridCardProps) {
   const comingSoon = product.availability === "coming_soon";
+  const external = isExternalProduct(product);
+  const buyLabel = owned ? "已拥有" : external ? "去微店" : "购买";
 
   return (
     <div
+      role={onCardClick ? "button" : undefined}
+      tabIndex={onCardClick ? 0 : undefined}
+      onClick={onCardClick}
+      onKeyDown={
+        onCardClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onCardClick();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "overflow-hidden rounded-xl border border-app-border bg-app-card transition-all",
         comingSoon ? "opacity-95" : "hover:border-app-accent/40",
+        onCardClick && "cursor-pointer",
       )}
     >
       <div className="flex gap-2 p-2">
@@ -53,11 +72,14 @@ export default function ShopProductGridCard({
             {!comingSoon && onBuy && (
               <button
                 type="button"
-                onClick={onBuy}
-                disabled={owned}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBuy();
+                }}
+                disabled={owned && canCheckoutInApp(product)}
                 className="shrink-0 rounded-lg bg-app-accent px-3 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
               >
-                {owned ? "已拥有" : "购买"}
+                {buyLabel}
               </button>
             )}
           </div>

@@ -7,6 +7,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import { formatPrice, getProductBySku } from "@/lib/shop/catalog";
 import ShopProductAvatar from "@/components/shop/ShopProductAvatar";
 import { createOrder } from "@/lib/shop/order-store";
+import { canCheckoutInApp } from "@/lib/shop/purchase";
 import { useApp } from "@/context/AppContext";
 
 function CheckoutContent() {
@@ -18,7 +19,7 @@ function CheckoutContent() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!product || product.availability !== "available") {
+    if (!product || !canCheckoutInApp(product)) {
       router.replace("/shop");
     }
   }, [product, router]);

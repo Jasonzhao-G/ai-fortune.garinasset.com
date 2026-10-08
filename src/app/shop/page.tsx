@@ -21,7 +21,13 @@ import {
   type ShopShelfId,
 } from "@/lib/shop/catalog";
 import { ownsVirtualItem } from "@/lib/shop/inventory-store";
+import {
+  canCheckoutInApp,
+  isExternalProduct,
+  resolveExternalPurchaseUrl,
+} from "@/lib/shop/purchase";
 import { useApp } from "@/context/AppContext";
+import type { ShopProduct } from "@/lib/shop/catalog";
 import { cn } from "@/lib/utils";
 import { ShopEmojiDisplay } from "@/components/icons/SpiritGourdIcon";
 
@@ -58,12 +64,26 @@ function ShopPageContent() {
     setActiveShelf(null);
   };
 
-  const handleProductClick = (sku: string, availability: string) => {
-    if (availability === "coming_soon") {
+  const handleProductClick = (product: ShopProduct) => {
+    if (product.availability === "coming_soon") {
       setComingSoonOpen(true);
       return;
     }
-    router.push(`/shop/product/${sku}`);
+    router.push(`/shop/product/${product.sku}`);
+  };
+
+  const handleProductBuy = (product: ShopProduct) => {
+    if (product.availability === "coming_soon") {
+      setComingSoonOpen(true);
+      return;
+    }
+    if (isExternalProduct(product)) {
+      window.open(resolveExternalPurchaseUrl(product), "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (canCheckoutInApp(product)) {
+      router.push(`/shop/checkout?sku=${product.sku}`);
+    }
   };
 
   return (
@@ -148,6 +168,7 @@ function ShopPageContent() {
               <ShopProductGridCard
                 key={product.sku}
                 product={product}
+                onCardClick={() => handleProductClick(product)}
                 owned={
                   user != null &&
                   product.section === "virtual" &&
@@ -156,7 +177,7 @@ function ShopPageContent() {
                 }
                 onBuy={
                   product.availability === "available"
-                    ? () => router.push(`/shop/checkout?sku=${product.sku}`)
+                    ? () => handleProductBuy(product)
                     : undefined
                 }
               />

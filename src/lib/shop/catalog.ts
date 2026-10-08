@@ -29,6 +29,8 @@ export interface ShopShelf {
   desc: string;
 }
 
+export type PurchaseChannel = "in_app" | "external";
+
 export interface ShopProduct {
   sku: string;
   name: string;
@@ -45,6 +47,10 @@ export interface ShopProduct {
   foodPlanId?: string;
   tags?: string[];
   petBreedId?: string;
+  /** 默认：虚拟=in_app，实物/硬件=external */
+  purchaseChannel?: PurchaseChannel;
+  /** 单品微店链接，未设则使用 NEXT_PUBLIC_WEIDIAN_STORE_URL */
+  externalPurchaseUrl?: string;
 }
 
 export const SHOP_SHELVES: ShopShelf[] = [
@@ -62,8 +68,8 @@ export const SHOP_SHELVES: ShopShelf[] = [
 
 export const SHOP_SECTIONS: { id: ShopSection; title: string; subtitle: string }[] = [
   { id: "virtual", title: "虚拟好物", subtitle: "灵丹即时到账 · 装饰纯视觉不影响灵力" },
-  { id: "physical", title: "开运实物", subtitle: "符咒 · 手串 · 摆件 · 即将上线" },
-  { id: "hardware", title: "NFC实体灵宠", subtitle: "十二灵兽同款 · 碰一碰绑定 App" },
+  { id: "physical", title: "开运实物", subtitle: "符咒 · 手串 · 摆件 · 微店发货" },
+  { id: "hardware", title: "NFC实体灵宠", subtitle: "十二灵兽同款 · 微店购买 · 碰一碰绑定" },
 ];
 
 const VIRTUAL_DECOR: ShopProduct[] = [
@@ -163,14 +169,14 @@ const VIRTUAL_FOOD: ShopProduct[] = PET_FOOD_PLANS.map((plan) => ({
 }));
 
 const PHYSICAL: ShopProduct[] = [
-  { sku: "phy-pixiu", name: "貔貅开运摆件", section: "physical", shelfId: "ornament", availability: "coming_soon", price: 168, emoji: "🦁", desc: "招财纳福 · 桌面摆件", tags: ["风水"] },
-  { sku: "phy-obsidian", name: "黑曜石能量手串", section: "physical", shelfId: "bracelet", availability: "coming_soon", price: 128, emoji: "⬛", desc: "辟邪护体 · 天然黑曜石", tags: ["手串"] },
-  { sku: "phy-fivestar", name: "五星转运串", section: "physical", shelfId: "bracelet", availability: "coming_soon", price: 198, emoji: "⭐", desc: "五行调和 · 手工编串", tags: ["手串"] },
-  { sku: "phy-pendant", name: "平安能量吊坠", section: "physical", shelfId: "pendant", availability: "coming_soon", price: 88, emoji: "🔮", desc: "随身守护 · 开光吊坠", tags: ["吊坠"] },
-  { sku: "phy-fu-wealth", name: "财运符", section: "physical", shelfId: "talisman", availability: "coming_soon", price: 58, emoji: "🧧", desc: "大师手绘 · 招财符咒", tags: ["符咒"] },
-  { sku: "phy-fu-noble", name: "贵人符", section: "physical", shelfId: "talisman", availability: "coming_soon", price: 58, emoji: "🎋", desc: "大师手绘 · 遇贵符咒", tags: ["符咒"] },
-  { sku: "phy-fu-protect", name: "防小人符", section: "physical", shelfId: "talisman", availability: "coming_soon", price: 58, emoji: "🛡️", desc: "大师手绘 · 护身符咒", tags: ["符咒"] },
-  { sku: "phy-master-card", name: "真人大师测问体验卡", section: "physical", shelfId: "experience", availability: "coming_soon", price: 99, emoji: "🧙", desc: "1 次真人大师在线测问", tags: ["体验卡"] },
+  { sku: "phy-pixiu", name: "貔貅开运摆件", section: "physical", shelfId: "ornament", availability: "available", price: 168, emoji: "🦁", desc: "招财纳福 · 桌面摆件", tags: ["风水"], purchaseChannel: "external" },
+  { sku: "phy-obsidian", name: "黑曜石能量手串", section: "physical", shelfId: "bracelet", availability: "available", price: 128, emoji: "⬛", desc: "辟邪护体 · 天然黑曜石", tags: ["手串"], purchaseChannel: "external" },
+  { sku: "phy-fivestar", name: "五星转运串", section: "physical", shelfId: "bracelet", availability: "available", price: 198, emoji: "⭐", desc: "五行调和 · 手工编串", tags: ["手串"], purchaseChannel: "external" },
+  { sku: "phy-pendant", name: "平安能量吊坠", section: "physical", shelfId: "pendant", availability: "available", price: 88, emoji: "🔮", desc: "随身守护 · 开光吊坠", tags: ["吊坠"], purchaseChannel: "external" },
+  { sku: "phy-fu-wealth", name: "财运符", section: "physical", shelfId: "talisman", availability: "available", price: 58, emoji: "🧧", desc: "大师手绘 · 招财符咒", tags: ["符咒"], purchaseChannel: "external" },
+  { sku: "phy-fu-noble", name: "贵人符", section: "physical", shelfId: "talisman", availability: "available", price: 58, emoji: "🎋", desc: "大师手绘 · 遇贵符咒", tags: ["符咒"], purchaseChannel: "external" },
+  { sku: "phy-fu-protect", name: "防小人符", section: "physical", shelfId: "talisman", availability: "available", price: 58, emoji: "🛡️", desc: "大师手绘 · 护身符咒", tags: ["符咒"], purchaseChannel: "external" },
+  { sku: "phy-master-card", name: "真人大师测问体验卡", section: "physical", shelfId: "experience", availability: "available", price: 99, emoji: "🧙", desc: "1 次真人大师在线测问", tags: ["体验卡"], purchaseChannel: "external" },
 ];
 
 const HARDWARE: ShopProduct[] = PET_BREEDS.map((pet) => ({
@@ -178,13 +184,14 @@ const HARDWARE: ShopProduct[] = PET_BREEDS.map((pet) => ({
   name: `${pet.baseName}灵宠玩偶`,
   section: "hardware" as const,
   shelfId: "doll" as const,
-  availability: "coming_soon" as const,
+  availability: "available" as const,
   price: 399,
   emoji: pet.emoji,
   desc: "内置芯片 · 碰一碰连接 App",
-  detail: "统一款式 NFC 实体灵宠玩偶，内置芯片，收货后可与 App 绑定唤醒专属灵宠。",
+  detail: "统一款式 NFC 实体灵宠玩偶，内置芯片，收货后可与 App 绑定唤醒专属灵宠。实物请在微店下单，本站仅展示与跳转。",
   petBreedId: pet.breedId,
   tags: ["NFC实体"],
+  purchaseChannel: "external" as const,
 }));
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
